@@ -12,10 +12,10 @@ public class Main {
         final List<String> lines = Files.readAllLines(Path.of("input"), StandardCharsets.US_ASCII);
         final List<Long> packages = lines.stream().mapToLong(Long::parseLong).boxed().collect(Collectors.toList());
 
-        PackageBalancer packageBalancerForPartOne = new OptimizedPackageBalancer(3);
-        System.out.println(packageBalancerForPartOne.balance(packages)); // result: 10439961859
+        GroupsDivider groupsDividerForPartOne = new OptimizedGroupsDivider(3);
+        System.out.println(groupsDividerForPartOne.divideIntoGroups(packages)); // result: 10439961859
 
-        PackageBalancer packageBalancerForPartTwo = new OptimizedPackageBalancer(4);
-        System.out.println(packageBalancerForPartTwo.balance(packages)); // result: 72050269
+        GroupsDivider groupsDividerForPartTwo = new OptimizedGroupsDivider(4);
+        System.out.println(groupsDividerForPartTwo.divideIntoGroups(packages)); // result: 72050269
     }
 }

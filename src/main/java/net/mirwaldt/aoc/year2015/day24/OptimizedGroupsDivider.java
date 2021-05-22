@@ -7,21 +7,21 @@ import java.util.stream.Stream;
 
 import static java.lang.Math.min;
 
-public class OptimizedPackageBalancer implements PackageBalancer {
+public class OptimizedGroupsDivider implements GroupsDivider {
     private final int numberOfGroups;
 
-    public OptimizedPackageBalancer(int numberOfGroups) {
+    public OptimizedGroupsDivider(int numberOfGroups) {
         this.numberOfGroups = numberOfGroups;
     }
 
     @Override
-    public long balance(List<Long> packages) {
+    public long divideIntoGroups(List<Long> packages) {
         final long sum = packages.stream().mapToLong(Long::intValue).sum();
         packages.sort(Comparator.<Long>naturalOrder().reversed());
         if (sum % numberOfGroups == 0) {
             final long weightOfEachGroup = sum / numberOfGroups;
             long[] minQuantumEntanglement = new long[] { Integer.MAX_VALUE };
-            findPackages(weightOfEachGroup, new ArrayList<>(), packages,
+            recursiveDivideIntoGroups(weightOfEachGroup, new ArrayList<>(), packages,
                     new long[] { Integer.MAX_VALUE }, minQuantumEntanglement);
             return minQuantumEntanglement[0];
         } else {
@@ -30,7 +30,7 @@ public class OptimizedPackageBalancer implements PackageBalancer {
         }
     }
 
-    private void findPackages(
+    private void recursiveDivideIntoGroups(
             long remainingWeight,
             List<Long> selectedPackages,
             List<Long> remainingPackages,
@@ -52,7 +52,7 @@ public class OptimizedPackageBalancer implements PackageBalancer {
                     long newRemainingWeight = remainingWeight - remainingPackage;
                     newRemainingPackages.remove(remainingPackage);
                     selectedPackages.add(remainingPackage);
-                    findPackages(newRemainingWeight, selectedPackages, newRemainingPackages, minSize, minQuantumEntanglement);
+                    recursiveDivideIntoGroups(newRemainingWeight, selectedPackages, newRemainingPackages, minSize, minQuantumEntanglement);
                     selectedPackages.remove(remainingPackage);
                     newRemainingPackages.add(remainingPackage);
                 }
