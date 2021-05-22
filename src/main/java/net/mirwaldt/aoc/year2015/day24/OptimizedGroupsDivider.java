@@ -3,7 +3,6 @@ package net.mirwaldt.aoc.year2015.day24;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Stream;
 
 import static java.lang.Math.min;
 
@@ -20,53 +19,49 @@ public class OptimizedGroupsDivider implements GroupsDivider {
         packages.sort(Comparator.<Long>naturalOrder().reversed());
         if (sum % numberOfGroups == 0) {
             final long weightOfEachGroup = sum / numberOfGroups;
-            long[] minQuantumEntanglement = new long[] { Integer.MAX_VALUE };
-            recursiveDivideIntoGroups(weightOfEachGroup, new ArrayList<>(), packages,
-                    new long[] { Integer.MAX_VALUE }, minQuantumEntanglement);
-            return minQuantumEntanglement[0];
+            return new InternalGroupsDivider().divideIntoGroups(weightOfEachGroup, packages);
         } else {
             throw new IllegalArgumentException(
                     "Sum of packages " + packages + "cannot be divided by " + numberOfGroups + ". sum=" + sum);
         }
     }
 
-    private void recursiveDivideIntoGroups(
-            long remainingWeight,
-            List<Long> selectedPackages,
-            List<Long> remainingPackages,
-            long[] minSize,
-            long[] minQuantumEntanglement) {
-        List<Long> newRemainingPackages = new ArrayList<>(remainingPackages);
-        int newSize = selectedPackages.size();
-        for (Long remainingPackage : remainingPackages) {
-            if(newSize <= minSize[0]) {
+    static class InternalGroupsDivider {
+        private long minSize;
+        private long minQuantumEntanglement;
+
+        public long divideIntoGroups(long weightOfEachGroup, List<Long> packages) {
+            minSize = Integer.MAX_VALUE;
+            minQuantumEntanglement = Integer.MAX_VALUE;
+            recursiveDivideIntoGroups(weightOfEachGroup, 1, new ArrayList<>(), packages);
+            return minQuantumEntanglement;
+        }
+
+        public void recursiveDivideIntoGroups(
+                long remainingWeight, long quantumEntanglement,
+                List<Long> selectedPackages, List<Long> remainingPackages) {
+            int newSize = selectedPackages.size() + 1;
+            for (int i = 0; i < remainingPackages.size() && newSize <= minSize; i++) {
+                Long remainingPackage = remainingPackages.get(i);
+                long newQuantumEntanglement = quantumEntanglement * remainingPackage;
                 if (remainingWeight == remainingPackage) {
-                    long quantumEntanglement = quantumEntanglement(selectedPackages) * remainingPackage;
-                    if(newSize < minSize[0]) {
-                        minSize[0] = newSize;
-                        minQuantumEntanglement[0] = quantumEntanglement;
-                    } else if(newSize == minSize[0]) {
-                        minQuantumEntanglement[0] = min(quantumEntanglement, minQuantumEntanglement[0]);
+                    if (newSize < minSize) {
+                        minSize = newSize;
+                        minQuantumEntanglement = newQuantumEntanglement;
+                    } else if (newSize == minSize) {
+                        minQuantumEntanglement = min(newQuantumEntanglement, minQuantumEntanglement);
                     }
                 } else if (remainingPackage < remainingWeight) {
-                    long newRemainingWeight = remainingWeight - remainingPackage;
-                    newRemainingPackages.remove(remainingPackage);
-                    selectedPackages.add(remainingPackage);
-                    recursiveDivideIntoGroups(newRemainingWeight, selectedPackages, newRemainingPackages, minSize, minQuantumEntanglement);
-                    selectedPackages.remove(remainingPackage);
-                    newRemainingPackages.add(remainingPackage);
+                    final List<Long> newRemainingPackages = remainingPackages.subList(i + 1, remainingPackages.size());
+                    if(!newRemainingPackages.isEmpty()) {
+                        final long newRemainingWeight = remainingWeight - remainingPackage;
+                        selectedPackages.add(remainingPackage);
+                        recursiveDivideIntoGroups(
+                                newRemainingWeight, newQuantumEntanglement, selectedPackages, newRemainingPackages);
+                        selectedPackages.remove(remainingPackage);
+                    }
                 }
-            } else {
-                break;
             }
         }
-    }
-
-    static long quantumEntanglement(List<Long> group) {
-        return quantumEntanglement(group.stream());
-    }
-
-    static long quantumEntanglement(Stream<Long> stream) {
-        return stream.reduce(1L, (product, val) -> product * val);
     }
 }
